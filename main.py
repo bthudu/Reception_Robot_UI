@@ -1,15 +1,11 @@
-# This Python file uses the following encoding: utf-8
 import sys
+import cv2
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsDropShadowEffect
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PySide6.QtCore import Qt, QThread
 from PySide6 import QtCore
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtGui import QImage, QPixmap
 
-
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside2-uic form.ui -o ui_form.py 
 from robot_ui import Ui_MainWindow
 
 class MainWindow(QMainWindow):
@@ -31,7 +27,6 @@ class MainWindow(QMainWindow):
     }
 ]
 
-
         # set moi vô thi hien cai nao 
         self.ui.Page.setCurrentWidget(self.ui.Page_signin)
         self.ui.Dashboard.setCurrentWidget(self.ui.Dashboard_signin)   
@@ -44,9 +39,12 @@ class MainWindow(QMainWindow):
         self.ui.Signup_btn_signup.clicked.connect(self.handle_signup)
 
         # click sang tab khac thi chuyen trang 
-        self.ui.Main_btn_camera.clicked.connect(lambda: self.ui.Page.setCurrentWidget(self.ui.Page_Camera))
-        self.ui.Main_btn_tracking.clicked.connect(lambda: self.ui.Page.setCurrentWidget(self.ui.Page_tracking))
+        self.ui.Main_btn_camera.clicked.connect(lambda: self.switch_to_page(self.ui.Page_Camera))
+        self.ui.Main_btn_tracking.clicked.connect(lambda: self.switch_to_page(self.ui.Page_tracking))
         self.ui.Account__btnlogout.clicked.connect(self.handle_logout)
+
+        # khoi tao camera
+        self.camera_thread = None
 
 
     def handle_login(self):
@@ -55,7 +53,7 @@ class MainWindow(QMainWindow):
 
         for user in self.registered_users:
             if user["username"] == username and user["password"] == password:
-                self.ui.Page.setCurrentWidget(self.ui.Page_Camera)  # sang giao diện chính
+                self.switch_to_page(self.ui.Page_Camera)  # sang giao diện chính
                 self.ui.Dashboard.setCurrentWidget(self.ui.Dashboard_main)
                 return
         else:
@@ -69,17 +67,17 @@ class MainWindow(QMainWindow):
         password = self.ui.Signup_password.text()
         verify   = self.ui.Signup_code.text()
 
-        # Kiểm tra có nhập đủ không
+        # da du truong thong tin chua?
         if not all([fullname, phone, username, password, verify]):
             QMessageBox.warning(self, "Sign Up Failed", "Please fill in all fields.")
             return
 
-        # ✅ Kiểm tra mã xác thực
+        # verify code?
         if verify.strip().lower() != "fablab":
             QMessageBox.warning(self, "Sign Up Failed", "Incorrect verification code.")
             return
 
-        # Kiểm tra trùng username
+        # co trung username?
         for user in self.registered_users:
             if user["username"] == username:
                 QMessageBox.warning(self, "Sign Up Failed", "Username already exists.")
@@ -105,7 +103,8 @@ class MainWindow(QMainWindow):
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg.setIcon(QMessageBox.Question)
 
-        # Tự canh giữa cửa sổ cha (vì frameless không làm auto được)
+        
+        # van chua canh giua duoc, chi dam bao no nam trong frame 
         msg.adjustSize()
         main_rect = self.geometry()
         x = main_rect.x() + (main_rect.width() - msg.width()) // 2
@@ -119,6 +118,81 @@ class MainWindow(QMainWindow):
             self.ui.Page.setCurrentWidget(self.ui.Page_signin)
             self.ui.Dashboard.setCurrentWidget(self.ui.Dashboard_signin)
         
+    
+    def switch_to_page(self, page_widget):
+        self.ui.Page.setCurrentWidget(page_widget)
+
+        # dung cac process dang chay 
+        self.stop_camera()
+
+        # Bật process phù hợp
+        page_handlers = {
+            self.ui.Page_Camera: self.start_camera,
+            #self.ui.Page_tracking: self.start_tracking,...
+        }
+
+        handler = page_handlers.get(page_widget)
+        if handler:
+            handler()
+
+
+    def start_camera(self):
+        # khoi tao camera dua tren class CameraThread
+        if not self.camera_thread:
+            self.camera_thread = CameraThread(self.ui.camera_label)
+            self.camera_thread.ImageUpdate.connect(self.update_camera_frame)
+            self.camera_thread.start()
+
+    def stop_camera(self):
+        # xoa camera de lan sau gan lai va start lai 
+        if self.camera_thread:
+            self.camera_thread.stop()
+            self.camera_thread = None
+
+    def update_camera_frame(self, image):
+        # hien thi len QLabel trong ui 
+        self.ui.camera_label.setPixmap(QPixmap.fromImage(image))
+
+    def closeEvent(self, event):
+        self.stop_camera()
+        event.accept()  
+
+
+
+class CameraThread(QThread):
+    ImageUpdate = QtCore.Signal(QImage) # bien ImageUpdate la 1 tin hieu de phat anh kieu QImage 
+
+    def __init__(self, target_label):
+        super().__init__()
+        self._active = True             # bien self._active là cờ báo chạy hay k  
+        self.target_label = target_label    # gan cai khung hinh vo 
+
+    def run(self):
+        cap = cv2.VideoCapture(0)       # mo webcam 
+        while self._active:
+            ret, frame = cap.read()     # lay khung hinh: ret: true khi doc thanh cong, frame dang BGR
+            if ret:
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)    # qt dung RGB nen phai chuyen lai 
+                h, w, ch = rgb.shape    # lay chieu cao, chieu rong, so kenh mau 
+                bytes_per_line = ch * w # so byte moi dong anh (?)
+
+                # tao QImage tu rgb.data, format RGB888: 3 kenh 8bit
+                qt_img = QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+
+                # scale lai 
+                label_width = self.target_label.width()
+                label_height = self.target_label.height()
+                scaled = qt_img.scaled(label_width, label_height, Qt.KeepAspectRatio)
+
+                self.ImageUpdate.emit(scaled)   # gui anh 
+        cap.release()   # thoat khoi vong lap khi thread dung 
+
+    def stop(self):
+        self._active = False
+        self.quit()
+        self.wait()
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWindow()

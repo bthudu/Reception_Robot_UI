@@ -791,12 +791,7 @@ class Ui_MainWindow(object):
         self.Page.addWidget(self.Page_robots)
         self.Page_tracking = QWidget()
         self.Page_tracking.setObjectName(u"Page_tracking")
-        self.Menu_tracking = QFrame(self.Page_tracking)
-        self.Menu_tracking.setObjectName(u"Menu_tracking")
-        self.Menu_tracking.setGeometry(QRect(0, 0, 1180, 120))
-        self.Menu_tracking.setMinimumSize(QSize(0, 120))
-        self.Menu_tracking.setMaximumSize(QSize(16777215, 120))
-        self.Menu_tracking.setStyleSheet(u"*{\n"
+        self.Page_tracking.setStyleSheet(u"*{\n"
 "background-color: rgb(240, 246, 255);\n"
 "}\n"
 "QPushButton{\n"
@@ -807,11 +802,19 @@ class Ui_MainWindow(object):
 ";\n"
 "	color: rgb(0, 0, 0);\n"
 "}")
+        self.gridLayout_6 = QGridLayout(self.Page_tracking)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.Menu_tracking = QFrame(self.Page_tracking)
+        self.Menu_tracking.setObjectName(u"Menu_tracking")
+        self.Menu_tracking.setMinimumSize(QSize(0, 120))
+        self.Menu_tracking.setMaximumSize(QSize(16777215, 120))
+        self.Menu_tracking.setStyleSheet(u"")
         self.Menu_tracking.setFrameShape(QFrame.NoFrame)
         self.Menu_tracking.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_3 = QHBoxLayout(self.Menu_tracking)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.label_26 = QLabel(self.Menu_tracking)
         self.label_26.setObjectName(u"label_26")
-        self.label_26.setGeometry(QRect(10, 30, 281, 70))
         self.label_26.setMinimumSize(QSize(0, 70))
         self.label_26.setMaximumSize(QSize(16777215, 70))
         font11 = QFont()
@@ -828,12 +831,24 @@ class Ui_MainWindow(object):
 "padding: 3px;\n"
 "background-color: #f9f9f9;\n"
 "font-size: 40px;")
-        self.verticalLayoutWidget_3 = QWidget(self.Page_tracking)
-        self.verticalLayoutWidget_3.setObjectName(u"verticalLayoutWidget_3")
-        self.verticalLayoutWidget_3.setGeometry(QRect(0, 120, 1180, 780))
-        self.tracking = QVBoxLayout(self.verticalLayoutWidget_3)
+        self.label_26.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_3.addWidget(self.label_26)
+
+
+        self.gridLayout_6.addWidget(self.Menu_tracking, 0, 0, 1, 1)
+
+        self.tracking = QVBoxLayout()
         self.tracking.setObjectName(u"tracking")
-        self.tracking.setContentsMargins(0, 0, 0, 0)
+        self.traking_label = QLabel(self.Page_tracking)
+        self.traking_label.setObjectName(u"traking_label")
+        self.traking_label.setAlignment(Qt.AlignCenter)
+
+        self.tracking.addWidget(self.traking_label)
+
+
+        self.gridLayout_6.addLayout(self.tracking, 1, 0, 1, 1)
+
         self.Page.addWidget(self.Page_tracking)
         self.Page_plotData = QWidget()
         self.Page_plotData.setObjectName(u"Page_plotData")
@@ -844,13 +859,7 @@ class Ui_MainWindow(object):
         self.Page.addWidget(self.Page_plotData)
         self.Page_Camera = QWidget()
         self.Page_Camera.setObjectName(u"Page_Camera")
-        self.Page_Camera.setStyleSheet(u"")
-        self.Menu_camera = QFrame(self.Page_Camera)
-        self.Menu_camera.setObjectName(u"Menu_camera")
-        self.Menu_camera.setGeometry(QRect(0, 0, 1180, 120))
-        self.Menu_camera.setMinimumSize(QSize(0, 120))
-        self.Menu_camera.setMaximumSize(QSize(16777215, 120))
-        self.Menu_camera.setStyleSheet(u"*{\n"
+        self.Page_Camera.setStyleSheet(u"*{\n"
 "background-color: rgb(240, 246, 255);\n"
 "}\n"
 "QPushButton{\n"
@@ -861,11 +870,19 @@ class Ui_MainWindow(object):
 ";\n"
 "	color: rgb(0, 0, 0);\n"
 "}")
+        self.gridLayout_7 = QGridLayout(self.Page_Camera)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.Menu_camera = QFrame(self.Page_Camera)
+        self.Menu_camera.setObjectName(u"Menu_camera")
+        self.Menu_camera.setMinimumSize(QSize(0, 120))
+        self.Menu_camera.setMaximumSize(QSize(16777215, 120))
+        self.Menu_camera.setStyleSheet(u"")
         self.Menu_camera.setFrameShape(QFrame.NoFrame)
         self.Menu_camera.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_4 = QHBoxLayout(self.Menu_camera)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.label_27 = QLabel(self.Menu_camera)
         self.label_27.setObjectName(u"label_27")
-        self.label_27.setGeometry(QRect(10, 30, 281, 70))
         self.label_27.setMinimumSize(QSize(0, 70))
         self.label_27.setMaximumSize(QSize(16777215, 70))
         self.label_27.setFont(font11)
@@ -879,12 +896,23 @@ class Ui_MainWindow(object):
         self.label_27.setFrameShadow(QFrame.Sunken)
         self.label_27.setMidLineWidth(5)
         self.label_27.setAlignment(Qt.AlignCenter)
-        self.verticalLayoutWidget_2 = QWidget(self.Page_Camera)
-        self.verticalLayoutWidget_2.setObjectName(u"verticalLayoutWidget_2")
-        self.verticalLayoutWidget_2.setGeometry(QRect(0, 120, 1180, 780))
-        self.camera = QVBoxLayout(self.verticalLayoutWidget_2)
+
+        self.horizontalLayout_4.addWidget(self.label_27)
+
+
+        self.gridLayout_7.addWidget(self.Menu_camera, 0, 0, 1, 1)
+
+        self.camera = QVBoxLayout()
         self.camera.setObjectName(u"camera")
-        self.camera.setContentsMargins(0, 0, 0, 0)
+        self.camera_label = QLabel(self.Page_Camera)
+        self.camera_label.setObjectName(u"camera_label")
+        self.camera_label.setAlignment(Qt.AlignCenter)
+
+        self.camera.addWidget(self.camera_label)
+
+
+        self.gridLayout_7.addLayout(self.camera, 1, 0, 1, 1)
+
         self.Page.addWidget(self.Page_Camera)
 
         self.horizontalLayout.addWidget(self.Page)
@@ -911,7 +939,7 @@ class Ui_MainWindow(object):
         self.Main_btn_camera.setDefault(True)
         self.Main_btn_tracking.setDefault(True)
         self.Account__btnlogout.setDefault(True)
-        self.Page.setCurrentIndex(1)
+        self.Page.setCurrentIndex(4)
         self.Signin_btn_login.setDefault(True)
         self.Signup_btn_signup.setDefault(True)
 
@@ -954,6 +982,8 @@ class Ui_MainWindow(object):
         self.Signup_code.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Verify code", None))
         self.Signup_btn_signup.setText(QCoreApplication.translate("MainWindow", u"Create Account", None))
         self.label_26.setText(QCoreApplication.translate("MainWindow", u"TRACKING", None))
+        self.traking_label.setText("")
         self.label_27.setText(QCoreApplication.translate("MainWindow", u"CAMERA", None))
+        self.camera_label.setText("")
     # retranslateUi
 
