@@ -1,5 +1,4 @@
-import sys
-import cv2
+import sys, pickle, socket, struct, cv2
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PySide6.QtCore import Qt, QThread
@@ -137,9 +136,9 @@ class MainWindow(QMainWindow):
 
 
     def start_camera(self):
-        # khoi tao camera dua tren class CameraThread
+        # khoi tao camera dua tren class SocketReceiver
         if not self.camera_thread:
-            self.camera_thread = CameraThread(self.ui.camera_label)
+            self.camera_thread = SocketReceiver(self.ui.camera_label)
             self.camera_thread.ImageUpdate.connect(self.update_camera_frame)
             self.camera_thread.start()
 
@@ -159,8 +158,8 @@ class MainWindow(QMainWindow):
 
 
 
-class CameraThread(QThread):
-    ImageUpdate = QtCore.Signal(QImage) # bien ImageUpdate la 1 tin hieu de phat anh kieu QImage 
+class SocketReceiver(QThread):
+    ImageUpdate = QtCore.Signal(QImage)
 
     def __init__(self, target_label):
         super().__init__()
@@ -168,24 +167,40 @@ class CameraThread(QThread):
         self.target_label = target_label    # gan cai khung hinh vo 
 
     def run(self):
-        cap = cv2.VideoCapture(0)       # mo webcam 
+        # tao socket nhan frame 
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind(('0.0.0.0', 9999)) # nhan toan bo ip ket noi den  
+        server_socket.listen(1) 
+        conn, addr = server_socket.accept() # chap nhan ket noi 
+        conn_file = conn.makefile('rb') # makefile rb de cho phep doc 
+
+        # vong lap nhan va giai ma frame 
         while self._active:
-            ret, frame = cap.read()     # lay khung hinh: ret: true khi doc thanh cong, frame dang BGR
-            if ret:
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)    # qt dung RGB nen phai chuyen lai 
-                h, w, ch = rgb.shape    # lay chieu cao, chieu rong, so kenh mau 
-                bytes_per_line = ch * w # so byte moi dong anh (?)
+            packed_msg_size = conn_file.read(4) # doc size 
+            if not packed_msg_size:
+                break
+            msg_size = struct.unpack(">L", packed_msg_size)[0]  # giai ma size 
 
-                # tao QImage tu rgb.data, format RGB888: 3 kenh 8bit
-                qt_img = QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            data = b""
+            while len(data) < msg_size:
+                data += conn_file.read(msg_size - len(data)) # doc frame 
 
-                # scale lai 
-                label_width = self.target_label.width()
-                label_height = self.target_label.height()
-                scaled = qt_img.scaled(label_width, label_height, Qt.KeepAspectRatio)
+            frame = pickle.loads(data) # chuyen frame tu byte sang frame 
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = rgb.shape
+            img = QImage(rgb.data, w, h, ch * w, QImage.Format_RGB888)
 
-                self.ImageUpdate.emit(scaled)   # gui anh 
-        cap.release()   # thoat khoi vong lap khi thread dung 
+            # scale lai 
+            label_width = self.target_label.width()
+            label_height = self.target_label.height()
+            scaled = img.scaled(label_width, label_height, Qt.KeepAspectRatio)
+
+            self.ImageUpdate.emit(scaled)   # gui anh 
+            
+        conn_file.close()   # thoat khoi vong lap khi thread dung 
+        conn.close()
+        server_socket.close()
+
 
     def stop(self):
         self._active = False
